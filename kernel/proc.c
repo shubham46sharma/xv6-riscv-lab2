@@ -20,11 +20,62 @@ static void freeproc(struct proc *p);
 
 extern char trampoline[]; // trampoline.S
 
+int ticks[NPROC]; // Store count of the ticks
+
+int p1_id,p2_id,p3_id,flag=0;
+
 // helps ensure that wakeups of wait()ing
 // parents are not lost. helps obey the
 // memory model when using p->parent.
 // must be acquired before any p->lock.
 struct spinlock wait_lock;
+
+
+//Lab2 functions
+// Function to create tickets
+int alloc_tickets(int n){
+  struct proc *p = myproc();
+  p->stride = 5000/n;
+  p->pass = p->stride;
+  ticks[p->pid] = 0;
+  if(n==30){
+	    p1_id=p->pid;
+	    flag=1;
+		#ifdef STRIDE
+		printf("Pass value for prog 1 : %d\n",p->pass);
+		#endif
+    }
+    else if(n==20){
+	    p2_id=p->pid;
+	    flag=1;
+		#ifdef STRIDE
+		printf("Pass value for prog 2 : %d\n",p->pass);
+		#endif
+    }
+    else if(n==10){
+	    p3_id=p->pid;
+	    flag=1;
+		#ifdef STRIDE
+		printf("Pass value for prog 3 : %d\n",p->pass);
+		#endif
+    }
+    return 1;
+}
+
+void display_statistics(){
+   if(flag==1)
+    {
+	   printf("Ticks in prog 1 : %d\n",ticks[p1_id]);
+	   printf("Ticks in prog 2 : %d\n",ticks[p2_id]);
+	   printf("Ticks in prog 3 : %d\n",ticks[p3_id]);
+  
+	   printf("Total ticks : %d\n",(ticks[p1_id]+ticks[p2_id]+ticks[p3_id]));
+   	   flag=0;
+
+    }
+    return 1;
+}
+
 
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
@@ -654,3 +705,5 @@ procdump(void)
     printf("\n");
   }
 }
+
+
