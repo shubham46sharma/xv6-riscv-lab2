@@ -95,3 +95,22 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+//lab2 syscall functions
+uint64
+sys_sched_tickets(void){
+	int n;
+	argint(0,&n);
+	alloc_tickets(n);
+	return 0;
+}
+
+uint64
+sys_sched_statistics(void){
+	int n;
+	int pnum;
+	argint(0,&n);
+	argint(1,&pnum);
+	display_statistics(n,pnum);
+	return 0;
+}

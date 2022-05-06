@@ -105,6 +105,9 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
+//lab 2 declarations
+extern uint64 sys_sched_tickets(void); //sched tickets lab 2
+extern uint64 sys_sched_statistics(void); // sched stats lab 2 
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -128,6 +131,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_sched_tickets] sys_sched_tickets, //lab 2
+[SYS_sched_statistics] sys_sched_statistics, //lab 2
 };
 
 void
