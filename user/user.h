@@ -23,6 +23,9 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int sched_tickets(int); 	//lab 2
+int sched_statistics(int,int);	//lab 2
+
 
 // ulib.c
 int stat(const char*, struct stat*);
