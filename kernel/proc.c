@@ -56,7 +56,7 @@ int alloc_tickets(int n){
     return 1;
 }
 
-int display_statistics(int n, int pnum){
+void display_statistics(){
    if(flag==1)
     {
 	   printf("Ticks in p1 : %d\n",ticks_array[p1_id]);
@@ -67,7 +67,6 @@ int display_statistics(int n, int pnum){
    	   flag=0;
 
     }
-    return 1;
 }
 
 
@@ -482,7 +481,7 @@ wait(uint64 addr)
 void
 scheduler(void)
 {
-  struct proc *p;
+  //struct proc *p;
   struct cpu *c = mycpu();
   
   c->proc = 0;
