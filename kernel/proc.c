@@ -486,26 +486,71 @@ scheduler(void)
   struct cpu *c = mycpu();
   
   c->proc = 0;
-  for(;;){
-    // Avoid deadlock by ensuring that devices can interrupt.
-    intr_on();
-
-    for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-      }
-      release(&p->lock);
-    }
+  for(;;)
+  {
+	  intr_on();
+	  #ifdef LOTTERY
+	  struct proc *p;
+	  int totalTickets = 0 ;
+	  for(p=proc;p<&proc[NPROC];p++)
+	  {
+		if(p->state==RUNNABLE){
+		  totalTickets+= p->tickets;
+		}
+	  }
+	  int winner = random_at_most(totalTickets);
+  
+	  int temp=0;
+	  for(p=proc;p<&proc[NPROC];p++)
+	  {
+	    if(p->state==RUNNABLE)
+		  temp+=p->tickets;
+	    if(temp>winner)
+	    {
+		  acquire(&p->lock);
+		  p->state = RUNNING;
+		  c->proc = p;
+		  ticks_array[p->pid]+=1;
+		  swtch(&c->context,&p->context);
+		  
+		  c->proc=0;
+		  release(&p->lock);
+		  
+		  break;
+	    }
+	  }
+	  #endif
+	  #ifdef STRIDE
+	  struct proc *p,*current_proc;
+	  int minPass = -1;
+	  
+	  for(p=proc;p<&proc[NPROC];p++){
+		  if(p->state == RUNNABLE &&(p->pass <= minPass || minPass<0))
+		  {
+			  minPass = p->pass;
+			  current_proc = p;
+		  }
+	  }
+	  
+	  for(p=proc; p<&proc[NPROC];p++){
+		  if(p->state!=RUNNABLE){
+			  continue;
+		  }
+		  if(p->pass == minPass){
+			  acquire(&p->lock);
+			  current_proc=p;
+			  c->proc=current_proc;
+			  current_proc->pass+=current_proc->stride;
+			  current_proc->state=RUNNING;
+			  ticks_array[current_proc->pid]+=1;
+			  swtch(&c->context,&current_proc->context);
+			  c->proc=0;
+			  
+			  release(&p->lock);
+			  break;
+		  }
+	  }
+	  #endif
   }
 }
 
