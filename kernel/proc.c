@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "rand.h"
 
 struct cpu cpus[NCPU];
 
@@ -23,7 +24,8 @@ extern char trampoline[]; // trampoline.S
 struct spinlock wait_lock;
 int ticks_array[NPROC]; // array of ticket counts
 
-int p1_id,p2_id,p3_id,flag=0;
+int p1_id,p2_id,p3_id,p4_id,p5_id,flag=0;
+//char* p1_name, p2_name, p3_name;
 
 //Lab2 functions
 // Function to create tickets
@@ -32,40 +34,32 @@ int alloc_tickets(int n){
   p->stride = 5000/n;
   p->pass = p->stride;
   ticks_array[p->pid] = 0;
-  if(n==30){
-	    p1_id=p->pid;
+  if(n != 5){
+      p->tickets = n;
 	    flag=1;
 		#ifdef STRIDE
-		printf("Pass value for prog 1 : %d\n",p->pass);
+    //printf("(%s)",p->name);
+    //printf("tickets: %d",p->tickets);
+		//printf(" ticks : %d\n",p->pass);
 		#endif
     }
-    else if(n==20){
-	    p2_id=p->pid;
-	    flag=1;
-		#ifdef STRIDE
-		printf("Pass value for prog 2 : %d\n",p->pass);
-		#endif
-    }
-    else if(n==10){
-	    p3_id=p->pid;
-	    flag=1;
-		#ifdef STRIDE
-		printf("Pass value for prog 3 : %d\n",p->pass);
-		#endif
-    }
+
+
     return 1;
 }
 
 void display_statistics(){
-   if(flag==1)
-    {
-	   printf("Ticks in p1 : %d\n",ticks_array[p1_id]);
-	   printf("Ticks in p2 : %d\n",ticks_array[p2_id]);
-	   printf("Ticks in p3 : %d\n",ticks_array[p3_id]);
-  
-	   printf("Total ticks : %d\n",(ticks_array[p1_id]+ticks_array[p2_id]+ticks_array[p3_id]));
-   	   flag=0;
+        struct proc *p = myproc();
 
+   for(p = proc; p < &proc[NPROC]; p++)
+    {
+      if(p->pid != 0)
+      {
+          printf("%d",p->pid);
+          printf("(%s)",p->name);
+          printf("tickets: %d",p->tickets);
+          printf(" ticks : %d\n",ticks_array[p->pid]);
+      }
     }
 }
 
@@ -163,6 +157,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->pass = 0;
+  //p->tickets = 5;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -497,7 +493,7 @@ scheduler(void)
 		  totalTickets+= p->tickets;
 		}
 	  }
-	  int winner = random_at_most(totalTickets);
+	  int winner = rand();
   
 	  int temp=0;
 	  for(p=proc;p<&proc[NPROC];p++)
