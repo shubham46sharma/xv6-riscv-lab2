@@ -24,8 +24,7 @@ extern char trampoline[]; // trampoline.S
 struct spinlock wait_lock;
 int ticks_array[NPROC]; // array of ticket counts
 
-int p1_id,p2_id,p3_id,p4_id,p5_id,flag=0;
-//char* p1_name, p2_name, p3_name;
+int p1_id,p2_id,p3_id,p4_id,flag=0;
 
 //Lab2 functions
 // Function to create tickets
@@ -37,14 +36,12 @@ int alloc_tickets(int n){
   if(n != 5){
       p->tickets = n;
 	    flag=1;
-		#ifdef STRIDE
+		//#ifdef STRIDE
     //printf("(%s)",p->name);
     //printf("tickets: %d",p->tickets);
 		//printf(" ticks : %d\n",p->pass);
-		#endif
+		//#endif
     }
-
-
     return 1;
 }
 
@@ -157,8 +154,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->tickets = 9;
   p->pass = 0;
-  //p->tickets = 5;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -493,7 +490,9 @@ scheduler(void)
 		  totalTickets+= p->tickets;
 		}
 	  }
-	  int winner = rand();
+  
+   int winner = rand();
+    //printf("Winner is : %d", winner);
   
 	  int temp=0;
 	  for(p=proc;p<&proc[NPROC];p++)
