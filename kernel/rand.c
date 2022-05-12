@@ -1,4 +1,3 @@
-// pseudo random generator (https://stackoverflow.com/a/7603688)
 unsigned short lfsr = 0xACE1u;
 unsigned short bit;
 unsigned rand()

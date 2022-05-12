@@ -24,8 +24,6 @@ extern char trampoline[]; // trampoline.S
 struct spinlock wait_lock;
 int ticks_array[NPROC]; // array of ticket counts
 
-int p1_id,p2_id,p3_id,p4_id,flag=0;
-
 //Lab2 functions
 // Function to create tickets
 int alloc_tickets(int n){
@@ -35,16 +33,10 @@ int alloc_tickets(int n){
   ticks_array[p->pid] = 0;
   if(n != 5){
       p->tickets = n;
-	    flag=1;
-		//#ifdef STRIDE
-    //printf("(%s)",p->name);
-    //printf("tickets: %d",p->tickets);
-		//printf(" ticks : %d\n",p->pass);
-		//#endif
     }
     return 1;
 }
-
+//Function to display the statistics
 void display_statistics(){
         struct proc *p = myproc();
 
@@ -154,8 +146,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
-  p->tickets = 9;
-  p->pass = 0;
+  p->tickets = 5; //lab2
+  p->pass = 0; //lab2
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -471,80 +463,70 @@ wait(uint64 addr)
 //  - swtch to start running that process.
 //  - eventually that process transfers control
 //    via swtch back to the scheduler.
-void
+void 
 scheduler(void)
 {
-  //struct proc *p;
   struct cpu *c = mycpu();
-  
   c->proc = 0;
-  for(;;)
-  {
-	  intr_on();
-	  #ifdef LOTTERY
-	  struct proc *p;
-	  int totalTickets = 0 ;
-	  for(p=proc;p<&proc[NPROC];p++)
-	  {
-		if(p->state==RUNNABLE){
-		  totalTickets+= p->tickets;
-		}
-	  }
-  
-   int winner = rand();
-    //printf("Winner is : %d", winner);
-  
-	  int temp=0;
-	  for(p=proc;p<&proc[NPROC];p++)
-	  {
-	    if(p->state==RUNNABLE)
-		  temp+=p->tickets;
-	    if(temp>winner)
-	    {
-		  acquire(&p->lock);
-		  p->state = RUNNING;
-		  c->proc = p;
-		  ticks_array[p->pid]+=1;
-		  swtch(&c->context,&p->context);
-		  
-		  c->proc=0;
-		  release(&p->lock);
-		  
-		  break;
-	    }
-	  }
-	  #endif
-	  #ifdef STRIDE
-	  struct proc *p,*current_proc;
-	  int minPass = -1;
-	  
-	  for(p=proc;p<&proc[NPROC];p++){
-		  if(p->state == RUNNABLE &&(p->pass <= minPass || minPass<0))
-		  {
-			  minPass = p->pass;
-			  current_proc = p;
-		  }
-	  }
-	  
-	  for(p=proc; p<&proc[NPROC];p++){
-		  if(p->state!=RUNNABLE){
-			  continue;
-		  }
-		  if(p->pass == minPass){
-			  acquire(&p->lock);
-			  current_proc=p;
-			  c->proc=current_proc;
-			  current_proc->pass+=current_proc->stride;
-			  current_proc->state=RUNNING;
-			  ticks_array[current_proc->pid]+=1;
-			  swtch(&c->context,&current_proc->context);
-			  c->proc=0;
-			  
-			  release(&p->lock);
-			  break;
-		  }
-	  }
-	  #endif
+  for(;;){
+      intr_on();
+      #ifdef LOTTERY
+      struct proc *p;
+      int total_tickets = 0 ;
+      for(p=proc;p<&proc[NPROC];p++)
+      {
+        if(p->state==RUNNABLE){
+          total_tickets += p->tickets;
+        }
+      }
+      int rand_selected = rand();
+      int t = 0;
+      for(p = proc; p <& proc[NPROC]; p++)
+      {
+        if(p-> state == RUNNABLE)
+          t += p->tickets;
+        if(t > rand_selected)
+        {
+          acquire(&p->lock);
+          p-> state = RUNNING;
+          c-> proc = p;
+          ticks_array[p->pid]+=1;
+          swtch(&c->context,&p->context);
+          c -> proc=0;
+          release(&p -> lock);
+          break;
+        }
+      }
+      #endif
+      #ifdef STRIDE
+      struct proc *p,*current;
+      int minPass = -1;
+      for(p=proc;p<&proc[NPROC];p++){
+          if(p->state == RUNNABLE &&(p->pass <= minPass || minPass<0))
+          {
+              minPass = p->pass;
+              current = p;
+          }
+      }
+      
+      for(p=proc; p<&proc[NPROC];p++){
+          if(p->state!=RUNNABLE){
+              continue;
+          }
+          if(p->pass == minPass){
+              acquire(&p->lock);
+              current = p;
+              c -> proc = current;
+              current->pass += current -> stride;
+              current -> state = RUNNING;
+              ticks_array[current -> pid] += 1;
+              swtch(&c->context, &current -> context);
+              c -> proc = 0;
+              release(&p->lock);
+              break;
+          }
+      }
+      #endif
   }
 }
 
